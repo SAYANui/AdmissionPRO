@@ -1,1 +1,68 @@
-Hello, World!
+AdmissionPRO
+│
+├── frontend/
+│   │
+│   ├── src/
+│   │   ├── components/
+│   │   │   ├── Navbar.jsx
+│   │   │   ├── Footer.jsx
+│   │   │   ├── CourseCard.jsx
+│   │   │   ├── DocumentUpload.jsx
+│   │   │   └── Timeline.jsx
+│   │
+│   │   ├── pages/
+│   │   │
+│   │   │   ├── student/
+│   │   │   │   ├── Home.jsx
+│   │   │   │   ├── Courses.jsx
+│   │   │   │   ├── CourseDetails.jsx     // video + apply
+│   │   │   │   ├── AdmissionForm.jsx     // form fill
+│   │   │   │   ├── TrackStatus.jsx       // search by code
+│   │   │   │   ├── Payment.jsx           // pay after verified
+│   │   │   │   └── DownloadPDF.jsx       // final pdf
+│   │   │
+│   │   │   └── admin/
+│   │   │       ├── AdminLogin.jsx
+│   │   │       ├── Dashboard.jsx
+│   │   │       ├── ManageCourses.jsx     // add course + youtube link
+│   │   │       ├── Applications.jsx      // verify/approve/reject
+│   │   │       └── Payments.jsx          // paid/unpaid
+│   │
+│   │   ├── firebase/
+│   │   │   ├── config.js
+│   │   │   ├── auth.js
+│   │   │   ├── db.js
+│   │   │   └── storage.js
+│   │
+│   │   ├── utils/
+│   │   │   ├── trackingCode.js
+│   │   │   └── pdfGenerator.js
+│   │
+│   │   ├── App.jsx
+│   │   └── main.jsx
+│   │
+│   └── package.json
+│
+│
+├── backend/   (Firebase Backend + Cloud Functions)
+│   │
+│   ├── functions/
+│   │   ├── index.js              // main cloud functions entry
+│   │   ├── sendEmail.js          // send confirmation email
+│   │   ├── paymentWebhook.js     // razorpay payment verify
+│   │   └── pdfService.js         // generate pdf server-side (optional)
+│   │
+│   ├── firestore/
+│   │   ├── courses.js            // course CRUD
+│   │   ├── applications.js       // admission submit + status update
+│   │   ├── documents.js          // document links store
+│   │   └── payments.js           // payment status update
+│   │
+│   ├── storage/
+│   │   └── studentDocs/          // uploaded docs folders
+│   │
+│   ├── firebase.json
+│   └── .firebaserc
+│
+│
+└── README.md
