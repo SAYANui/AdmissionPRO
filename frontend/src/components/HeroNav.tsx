@@ -1,15 +1,18 @@
 import { ModeToggle } from "./mode-toggle"
 import { Button } from "./ui/button"
+import { useNavigate } from "react-router"
 
 const HeroNav = () => {
+  const navigate = useNavigate()
+
   return (
     <nav className="container mx-auto border-b border-dashed">
       <div className="flex items-center justify-between p-4">
         <h1 className="text-xl">Admission<span className="text-primary">PRO</span></h1>
         <div className="flex justify-center items-center gap-2">
           <ModeToggle />
-          <Button variant="outline" size="sm">Log In</Button>
-          <Button variant="default" size="sm">Sign Up</Button>
+          <Button variant="outline" size="sm" onClick={() => navigate("/login")}>Log In</Button>
+          <Button variant="default" size="sm" onClick={() => navigate("/signup")}>Sign Up</Button>
         </div>
       </div>
     </nav>
