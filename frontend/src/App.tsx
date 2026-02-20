@@ -1,6 +1,6 @@
 import { Route, Routes } from "react-router";
 
-import Hero from "@/pages/Hero";
+import Hero from "@/pages/hero";
 import { ThemeProvider } from "./components/theme-provider";
 
 export function App() {
