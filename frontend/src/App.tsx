@@ -6,6 +6,8 @@ import AdminDashboard from "./pages/admin/dashboard";
 import AdminSignup from "./pages/admin/AdminSignup";
 import AdminLogin from "./pages/admin/AdminLogin";
 import ManageCourses from "./pages/admin/managecourses";
+import StudentLogin from "./pages/student/StudentLogin";
+import StudentSignup from "./pages/student/StudentSignup";
 
 export function App() {
   return (
@@ -17,6 +19,8 @@ export function App() {
         <Route path="/admin/login" element={<AdminLogin />} />
         <Route path="/admin/dashboard" element={<AdminDashboard />} />
         <Route path="/admin/managecourses" element={<ManageCourses />} />
+        <Route path="/student/login" element={<StudentLogin/>}/>
+        <Route path="/student/signup" element={<StudentSignup/>}/>
       </Routes>
     </ThemeProvider>
   )

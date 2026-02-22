@@ -1,4 +1,4 @@
-
+import { Link } from "react-router-dom"
 
 const LandingPage = () => {
   return (
@@ -14,10 +14,10 @@ const LandingPage = () => {
           <a href="#" className="hover:text-indigo-600 transition">Contact</a>
         </div>
         <div className="flex items-center space-x-4">
-          <button className="text-slate-600 font-medium hover:text-indigo-600">Login</button>
-          <button className="bg-indigo-600 text-white px-5 py-2 rounded-lg font-medium hover:bg-indigo-700 transition shadow-sm">
+          <Link to ="student/login" className="text-slate-600 font-medium hover:text-indigo-600">Login</Link>
+          <Link to ="student/signup </div>"className="bg-indigo-600 text-white px-5 py-2 rounded-lg font-medium hover:bg-indigo-700 transition shadow-sm">
             Sign Up
-          </button>
+          </Link>
         </div>
       </nav>
 
