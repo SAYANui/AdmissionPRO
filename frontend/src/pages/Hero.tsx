@@ -1,15 +1,19 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Home, GraduationCap } from "lucide-react"; // Assuming lucide-react is installed
+import { Home, GraduationCap } from "lucide-react"; 
 
 const LandingPage = () => {
   return (
     <div className="min-h-screen bg-slate-950 text-slate-50 font-sans selection:bg-cyan-500/30">
-      {/* Navigation */}
+  
+  
+  
       <nav className="flex items-center justify-between px-8 py-6 border-b border-slate-800 bg-slate-950/50 backdrop-blur-md sticky top-0 z-50">
         
-        {/* Left Side: Glowing Logo Box */}
+        
+
+
         <div className="group relative">
           <div className="absolute -inset-1 bg-gradient-to-r from-cyan-600 to-blue-600 rounded-lg blur opacity-25 group-hover:opacity-75 transition duration-1000"></div>
           <div className="relative flex items-center space-x-2 bg-slate-900 px-4 py-2 rounded-lg border border-slate-700">
@@ -20,16 +24,18 @@ const LandingPage = () => {
           </div>
         </div>
 
-        {/* Center: Nav Links */}
+   
         <div className="hidden md:flex space-x-8 font-medium text-slate-400">
           <Link to="/courses" className="hover:text-cyan-400 transition-colors">Courses</Link>
           <a href="#" className="hover:text-cyan-400 transition-colors">About</a>
           <a href="#" className="hover:text-cyan-400 transition-colors">Contact</a>
         </div>
 
-        {/* Right Side: Home Button Box & Auth */}
+       
         <div className="flex items-center space-x-4">
-          {/* Glowing Home Button Box */}
+
+      
+      
           <div className="group relative">
             <div className="absolute -inset-1 bg-gradient-to-r from-cyan-600 to-blue-600 rounded-lg blur opacity-0 group-hover:opacity-50 transition duration-500"></div>
             <Link 

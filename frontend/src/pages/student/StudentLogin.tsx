@@ -53,7 +53,7 @@ const StudentLogin = () => {
             <div>          </div>
 
             <div className="text-center space-y-1">
-              <h2 className="text-2xl font-bold tracking-tight text-slate-300">welcome back</h2>
+              <h2 className="text-2xl font-bold tracking-tight text-slate-300">welcome back student</h2>
               <CardDescription className="text-slate-400">
                 Enter your secure credentials.
               </CardDescription>
