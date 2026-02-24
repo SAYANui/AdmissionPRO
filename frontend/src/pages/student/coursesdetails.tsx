@@ -35,6 +35,9 @@ const FEED_DATA = [
     fees: "$500 Total",
     students: "5,000+ Students"
   }
+
+
+  
 ];
 
 const CourseDetails = () => {
@@ -44,7 +47,7 @@ const CourseDetails = () => {
   if (!course) {
     return (
       <div className="min-h-screen bg-slate-950 text-white flex flex-col items-center justify-center">
-        <h2 className="text-2xl font-bold mb-4">Course Not Found</h2>
+        <h2 className="text-2xl font-bold mb-4">Course Not Found😢</h2>
         <Link to="/student/home" className="text-cyan-400 underline">Back to Feed</Link>
       </div>
     );
@@ -58,9 +61,11 @@ const CourseDetails = () => {
           <ArrowLeft className="h-5 w-5" />
           <span className="font-medium">Back to Feed</span>
         </Link>
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-2" >
           <GraduationCap className="h-6 w-6 text-cyan-400" />
-          <span className="text-xl font-black text-cyan-400">AdmissionPRO</span>
+                      <span className="text-xl md:text-2xl font-black tracking-tighter text-cyan-400">
+                        Admission<span className="text-slate-50">PRO</span>
+                      </span>
         </div>
       </nav>
 

@@ -11,7 +11,7 @@ import StudentSignup from "./pages/student/StudentSignup";
 import StatusPage from "./pages/student/StatusPage";
 import Home from "./pages/student/home";
 import Coursesdetails from "./pages/student/coursesdetails";
-
+import AdmissionForm from "./pages/student/AdmissionForm";
 export function App() {
   return (
     <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
@@ -27,6 +27,7 @@ export function App() {
         <Route path="/student/home" element={<Home/>}/>
         <Route path="/student/statuspage" element ={<StatusPage/>}/>
 <Route path="/student/course/:id" element={<Coursesdetails />} />
+<Route path="/student/apply" element={<AdmissionForm/>}/>
       </Routes>
     </ThemeProvider>
   )
