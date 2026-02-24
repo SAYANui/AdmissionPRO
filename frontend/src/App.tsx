@@ -8,6 +8,9 @@ import AdminLogin from "./pages/admin/AdminLogin";
 import ManageCourses from "./pages/admin/managecourses";
 import StudentLogin from "./pages/student/StudentLogin";
 import StudentSignup from "./pages/student/StudentSignup";
+import StatusPage from "./pages/student/StatusPage";
+import Home from "./pages/student/home";
+import Coursesdetails from "./pages/student/coursesdetails";
 
 export function App() {
   return (
@@ -21,6 +24,9 @@ export function App() {
         <Route path="/admin/managecourses" element={<ManageCourses />} />
         <Route path="/student/login" element={<StudentLogin/>}/>
         <Route path="/student/signup" element={<StudentSignup/>}/>
+        <Route path="/student/home" element={<Home/>}/>
+        <Route path="/student/statuspage" element ={<StatusPage/>}/>
+<Route path="/student/course/:id" element={<Coursesdetails />} />
       </Routes>
     </ThemeProvider>
   )
