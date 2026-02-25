@@ -1,3 +1,5 @@
+"use client"
+
 import React, { useState } from "react"
 import { Button } from "@/components/ui/button"
 import {
@@ -9,11 +11,43 @@ import {
 } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Link } from "react-router-dom"
-import { Eye, EyeOff, Home, GraduationCap } from "lucide-react" 
+import { Link, useNavigate } from "react-router-dom"
+import { Eye, EyeOff, Home, GraduationCap, Loader2, AlertCircle } from "lucide-react"
 
-const StudentLogin = () => {
+// --- FIREBASE IMPORTS ---
+import { auth } from "../../firebase/auth" // Adjust this path to your firebase config
+import { signInWithEmailAndPassword } from "firebase/auth"
+
+const AdminLogin = () => {
   const [showPassword, setShowPassword] = useState(false)
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState("")
+  
+  const navigate = useNavigate()
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setLoading(true)
+    setError("")
+
+    try {
+      await signInWithEmailAndPassword(auth, email, password)
+      // On success, go to dashboard
+      navigate("/admin/dashboard")
+    } catch (err: any) {
+      console.error(err)
+      // Better error messaging
+      if (err.code === 'auth/invalid-credential') {
+        setError("Invalid email or password.")
+      } else {
+        setError("Failed to login. Please try again.")
+      }
+    } finally {
+      setLoading(false)
+    }
+  }
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-slate-950 p-6 selection:bg-cyan-500/30 font-sans">
@@ -21,16 +55,10 @@ const StudentLogin = () => {
         
         {/* EXTERNAL CARD GLOW */}
         <div className="absolute -inset-1 bg-gradient-to-r from-cyan-600 to-blue-600 rounded-xl blur-2xl opacity-20 group-hover:opacity-40 transition duration-1000 group-hover:duration-200"></div>
-        <div className="absolute -inset-px bg-gradient-to-r from-cyan-400 to-cyan-600 rounded-xl opacity-0 group-hover:opacity-100 transition duration-500"></div>
 
         <Card className="relative w-full border-none bg-slate-900 text-slate-50 shadow-2xl overflow-hidden">
           
           <CardHeader className="space-y-4 pt-8">
-          
-          
-
-
-          
             <div className="flex items-center justify-between w-full">
               {/* Glowing Logo Box */}
               <div className="group/logo relative">
@@ -43,12 +71,7 @@ const StudentLogin = () => {
                 </div>
               </div>
 
-             
-
-
-
               <div className="group/home relative">
-                <div className="absolute -inset-1 bg-cyan-500 rounded-lg blur opacity-0 group-hover/home:opacity-50 transition duration-500"></div>
                 <Link 
                   to="/" 
                   className="relative flex items-center justify-center bg-slate-800 border border-slate-700 p-2 rounded-lg hover:border-cyan-500 transition-all text-cyan-400"
@@ -57,74 +80,94 @@ const StudentLogin = () => {
                 </Link>
               </div>
             </div>
-            <div>          </div>
 
-            <div className="text-center space-y-1">
-              <h2 className="text-2xl font-bold tracking-tight text-slate-300">welcome back </h2>
+            <div className="text-center space-y-1 pt-2">
+              <h2 className="text-2xl font-bold tracking-tight text-slate-300 capitalize">welcome back</h2>
               <CardDescription className="text-slate-400">
-                Enter institution's details 
+                Enter institution's credentials
               </CardDescription>
             </div>
           </CardHeader>
           
-          <CardContent className="grid gap-6">
-            <div className="grid gap-2">
-              <Label htmlFor="email" className="text-slate-200 ml-1 text-sm">your email</Label>
-              <Input 
-                id="email" 
-                type="email" 
-                placeholder="organization@email.com" 
-                className="bg-slate-800/50 border-slate-700 text-slate-100 focus-visible:ring-cyan-500 focus-visible:border-cyan-500 transition-all"
-              />
-            </div>
-            
-            <div className="grid gap-2">
-              <Label htmlFor="password" className="text-slate-200 ml-1 text-sm">enter saved password</Label>
-              <div className="relative">
+          <form onSubmit={handleLogin}>
+            <CardContent className="grid gap-6">
+              {/* ERROR ALERT */}
+              {error && (
+                <div className="flex items-center gap-2 bg-red-500/10 border border-red-500/20 text-red-400 p-3 rounded-lg text-xs animate-in fade-in zoom-in duration-300">
+                  <AlertCircle className="h-4 w-4 shrink-0" />
+                  {error}
+                </div>
+              )}
+
+              <div className="grid gap-2">
+                <Label htmlFor="email" className="text-slate-200 ml-1 text-sm font-medium">Your Email</Label>
                 <Input 
-                  id="password" 
-                  type={showPassword ? "text" : "password"} 
-                  placeholder="••••••••" 
-                  className="bg-slate-800/50 border-slate-700 text-slate-100 focus-visible:ring-cyan-500 focus-visible:border-cyan-500 transition-all pr-10"
+                  id="email" 
+                  type="email" 
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="admin@institution.com" 
+                  required
+                  className="bg-slate-800/50 border-slate-700 text-slate-100 focus-visible:ring-cyan-500 focus-visible:border-cyan-500 transition-all"
                 />
-                
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-cyan-400 transition-colors"
-                >
-                  {showPassword ? (
-                    <EyeOff className="h-4 w-4" />
-                  ) : (
-                    <Eye className="h-4 w-4" />
-                  )}
-                </button>
               </div>
-            </div>
-          </CardContent>
+              
+              <div className="grid gap-2">
+                <Label htmlFor="password" className="text-slate-200 ml-1 text-sm font-medium">Saved Password</Label>
+                <div className="relative">
+                  <Input 
+                    id="password" 
+                    type={showPassword ? "text" : "password"} 
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="••••••••" 
+                    required
+                    className="bg-slate-800/50 border-slate-700 text-slate-100 focus-visible:ring-cyan-500 focus-visible:border-cyan-500 transition-all pr-10"
+                  />
+                  
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-cyan-400 transition-colors"
+                  >
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+              </div>
+            </CardContent>
+            <br>
+            </br>
 
-          <CardFooter className="flex flex-col gap-4 pb-8">
-            <Button className="w-full bg-cyan-600 hover:bg-cyan-500 text-slate-950 font-bold text-lg py-6 rounded-lg transition-all hover:shadow-[0_0_20px_rgba(6,182,212,0.4)] active:scale-[0.98]">
-              LOGIN
-            </Button>
-            
-            <div className="flex flex-col items-center gap-2 mt-2">
-              <p className="text-xs text-slate-500">
-                New here? 
-                <Link to="/admin/signup" className="ml-1 text-cyan-400 font-semibold hover:text-cyan-300 transition-colors">
-                  Sign up NOW!
-                </Link>
-              </p>
-      
-
-
-
-            </div>
-          </CardFooter>
+            <CardFooter className="flex flex-col gap-4 pb-8">
+              <Button 
+                type="submit"
+                disabled={loading}
+                className="w-full bg-cyan-600 hover:bg-cyan-500 text-slate-950 font-extrabold text-base py-6 rounded-lg transition-all hover:shadow-[0_0_20px_rgba(6,182,212,0.4)] active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed"
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    AUTHENTICATING...
+                  </>
+                ) : (
+                  "LOGIN TO DASHBOARD"
+                )}
+              </Button>
+              
+              <div className="flex flex-col items-center gap-2 mt-2">
+                <p className="text-xs text-slate-500">
+                  First time? 
+                  <Link to="/admin/signup" className="ml-1 text-cyan-400 font-bold hover:text-cyan-300 transition-colors underline-offset-4 hover:underline">
+                    Sign up NOW!
+                  </Link>
+                </p>
+              </div>
+            </CardFooter>
+          </form>
         </Card>
       </div>
     </div>
   )
 }
 
-export default StudentLogin
+export default AdminLogin

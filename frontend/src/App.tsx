@@ -12,7 +12,53 @@ import StatusPage from "./pages/student/StatusPage";
 import Home from "./pages/student/home";
 import Coursesdetails from "./pages/student/coursesdetails";
 import AdmissionForm from "./pages/student/AdmissionForm";
+import Manageapplication from "./pages/admin/manageapplications";
+
+
+
+//import kor6e db,auth.........
+
+
+import { db } from "./firebase/db";
+import { collection, getDocs } from "firebase/firestore";
+import { useEffect } from "react";
+
+
+
 export function App() {
+
+
+  // kaj kor6e check korar jonne 
+
+
+useEffect(() => {
+  const testFirebase = async () => {
+    try {
+      const querySnapshot = await getDocs(collection(db, "test"));
+      console.log("🔥 Firebase Connection Success!");
+    } catch (error) {
+      console.error("❌ Firebase Connection Error:", error);
+    }
+  };
+
+  testFirebase();
+}, []);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   return (
     <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
       <Routes>
@@ -27,7 +73,8 @@ export function App() {
         <Route path="/student/home" element={<Home/>}/>
         <Route path="/student/statuspage" element ={<StatusPage/>}/>
 <Route path="/student/course/:id" element={<Coursesdetails />} />
-<Route path="/student/apply" element={<AdmissionForm/>}/>
+ <Route path="/student/apply/:courseId" element={<AdmissionForm />} />
+<Route path="/admin/application/:id" element={<Manageapplication />} />
       </Routes>
     </ThemeProvider>
   )

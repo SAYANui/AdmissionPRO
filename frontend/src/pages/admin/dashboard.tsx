@@ -1,11 +1,10 @@
 "use client"
 
-import React from "react"
-import { Bar, BarChart, CartesianGrid, XAxis, Label, Pie, PieChart, Sector } from "recharts"
-// import { type PieSectorDataItem } from "recharts/types/polar/Pie"
+import React, { useState, useEffect, useMemo } from "react"
+import { useNavigate,Link } from "react-router-dom" // Import navigate
+import { Pie, PieChart, Sector, Label } from "recharts"
 import {
   ChartContainer,
-  ChartStyle,
   ChartTooltip,
   ChartTooltipContent,
   type ChartConfig,
@@ -16,7 +15,6 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-  CardFooter
 } from "@/components/ui/card"
 import {
   Table,
@@ -34,196 +32,123 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
-import { Input } from "@/components/ui/input"
-import { TrendingUp } from "lucide-react"
+import { GraduationCap, Loader2, Users, FileText, CheckCircle, ArrowUpRight } from "lucide-react"
 
-// --- MOCK DATA ---
-const barData = [
-  { year: "2021", Student: 450 },
-  { year: "2022", Student: 520 },
-  { year: "2023", Student: 610 },
-  { year: "2024", Student: 800 },
-]
+// --- FIREBASE IMPORTS ---
+import { db } from "../../firebase/db"
+import { collection, onSnapshot, query, orderBy, limit } from "firebase/firestore"
 
-const barChartConfig = {
-  desktop: {
-    label: "Desktop",
-    color: "var(--chart-1)",
-  },
-} satisfies ChartConfig
+export default function AdminDashboard() {
+  const navigate = useNavigate() // Hook for navigation
+  const [applications, setApplications] = useState<any[]>([])
+  const [courses, setCourses] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+  const [activeCourse, setActiveCourse] = useState<string>("")
 
-export const description = "An interactive pie chart"
+  useEffect(() => {
+    const qApps = query(collection(db, "applications"), orderBy("createdAt", "desc"), limit(5));
+    const unsubApps = onSnapshot(qApps, (snap) => {
+      setApplications(snap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+    });
 
-const courseData = [
-  { course: "january", desktop: 186, fill: "var(--color-january)" },
-  { course: "february", desktop: 305, fill: "var(--color-february)" },
-  { course: "march", desktop: 237, fill: "var(--color-march)" },
-  { course: "april", desktop: 173, fill: "var(--color-april)" },
-  { course: "may", desktop: 209, fill: "var(--color-may)" },
-]
+    const unsubCourses = onSnapshot(collection(db, "courses"), (snap) => {
+      const courseList = snap.docs.map(doc => ({
+        course: doc.id,
+        name: doc.data().name,
+        intake: doc.data().intake || 0,
+        fill: `var(--chart-${(snap.docs.indexOf(doc) % 5) + 1})`
+      }));
+      setCourses(courseList);
+      if (courseList.length > 0) setActiveCourse(courseList[0].course);
+      setLoading(false);
+    });
 
-const pieChartConfig = {
-  visitors: {
-    label: "Visitors",
-  },
-  desktop: {
-    label: "Desktop",
-  },
-  mobile: {
-    label: "Mobile",
-  },
-  january: {
-    label: "BCA",
-    color: "var(--chart-1)",
-  },
-  february: {
-    label: "MCA",
-    color: "var(--chart-2)",
-  },
-  march: {
-    label: "BBA",
-    color: "var(--chart-3)",
-  },
-  april: {
-    label: "B. Com",
-    color: "var(--chart-4)",
-  },
-  may: {
-    label: "MBA",
-    color: "var(--chart-5)",
-  },
-} satisfies ChartConfig
+    return () => { unsubApps(); unsubCourses(); };
+  }, []);
 
-const students = [
-  { id: "1", name: "Alice Johnson", course: "Computer Science", status: "Verified", date: "2024-02-15" },
-  { id: "2", name: "Bob Smith", course: "Electronics", status: "Pending", date: "2024-02-16" },
-  { id: "3", name: "Charlie Brown", course: "Mechanical", status: "Rejected", date: "2024-02-14" },
-  { id: "4", name: "Diana Prince", course: "Computer Science", status: "Verified", date: "2024-02-18" },
-]
+  const pieChartConfig = useMemo(() => {
+    const config: ChartConfig = { visitors: { label: "Seats" } };
+    courses.forEach((c, index) => {
+      config[c.course] = { label: c.name, color: `var(--chart-${(index % 5) + 1})` };
+    });
+    return config;
+  }, [courses]);
 
-const AdminDashboard = () => {
-  const id = "pie-interactive"
-  const [activeCourse, setActiveCourse] = React.useState(courseData[0].course)
-  const activeIndex = React.useMemo(
-    () => courseData.findIndex((item) => item.course === activeCourse),
-    [activeCourse]
-  )
-  const courses = React.useMemo(() => courseData.map((item) => item.course), [])
+  const activeIndex = useMemo(() => courses.findIndex((item) => item.course === activeCourse), [activeCourse, courses]);
+
+  if (loading) return (
+    <div className="min-h-screen bg-slate-950 flex items-center justify-center">
+      <Loader2 className="h-10 w-10 animate-spin text-cyan-500" />
+    </div>
+  );
+
   return (
-    <div className="p-8 space-y-8 min-h-screen container mx-auto">
-      <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+    <div className="p-8 space-y-8 min-h-screen bg-slate-950 text-slate-50 selection:bg-cyan-500/30 font-sans">
+      
+      {/* --- HEADER --- */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div className="space-y-1">
+          <div className="flex items-center gap-2 bg-slate-900 border border-slate-800 w-fit px-4 py-1.5 rounded-full mb-2">
+            <GraduationCap className="h-6 w-6 text-cyan-400" />
+            <h1 className="text-4xl font-black tracking-tighter text-white">
+            Admission<span className="text-cyan-500">PRO</span>
+          </h1>
+          </div>
+          <Link to= "/" className="text-1*1 font-black tracking-tighter text-cyan-400">
+           logout
+          </Link>
+        </div>
+        
+        <div className="flex gap-4">
+            {/* CLICKABLE COURSE CARD */}
+            <button 
+              onClick={() => navigate("/admin/managecourses")}
+              className="text-left transition-transform active:scale-95"
+            >
+              <StatMiniCard 
+                icon={<Users size={16}/>} 
+                label="Total Courses" 
+                value={courses.length} 
+                isLink 
+              />
+            </button>
+            <StatMiniCard icon={<FileText size={16}/>} label="Applications" value={applications.length} />
+        </div>
       </div>
 
-      {/* --- CHARTS SECTION --- */}
-      <div className="grid gap-6 md:grid-cols-2">
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         
-        {/* Bar Chart: Students Per Year */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Total Student Per Year</CardTitle>
-            <CardDescription>Number of students admitted each year</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ChartContainer config={barChartConfig}>
-              <BarChart accessibilityLayer data={barData}>
-                <CartesianGrid vertical={false} />
-                <XAxis
-                  dataKey="year"
-                  tickLine={false}
-                  tickMargin={10}
-                  axisLine={false}
-                  tickFormatter={(value) => value.slice(0, 3)}
-                />
-                <ChartTooltip
-                  cursor={false}
-                  content={<ChartTooltipContent hideLabel />}
-                />
-                <Bar dataKey="Student" fill="var(--color-desktop)" radius={8} />
-              </BarChart>
-            </ChartContainer>
-          </CardContent>
-          {/* <CardFooter className="flex-col items-start gap-2 text-sm">
-            <div className="flex gap-2 leading-none font-medium">
-              Trending up by 5.2% this month <TrendingUp className="h-4 w-4" />
-            </div>
-            <div className="text-muted-foreground leading-none">
-              Showing total visitors for the last 6 months
-            </div>
-          </CardFooter> */}
-        </Card>
-
-        {/* Pie Chart: Course Distribution */}
-        <Card data-chart={id} className="flex flex-col">
-          <ChartStyle id={id} config={pieChartConfig} />
-          <CardHeader className="flex-row items-start space-y-0 pb-0">
-            <div className="grid gap-1">
-              <CardTitle>Course Distribution</CardTitle>
-              <CardDescription>Distribution of students across different courses</CardDescription>
-            </div>
+        {/* --- COURSE DISTRIBUTION PIE --- */}
+        <Card className="lg:col-span-1 bg-slate-900 border-slate-800">
+          <CardHeader className="flex-row items-center justify-between pb-2">
+            <CardTitle className="text-lg font-bold text-slate-200">Seat Distribution</CardTitle>
             <Select value={activeCourse} onValueChange={setActiveCourse}>
-              <SelectTrigger
-                className="ml-auto h-7 w-[130px] rounded-lg pl-2.5"
-                aria-label="Select a value"
-              >
-                <SelectValue placeholder="Select course" />
+              <SelectTrigger className="w-[120px] bg-slate-950 border-slate-800 text-xs">
+                <SelectValue placeholder="Select" />
               </SelectTrigger>
-              <SelectContent align="end" className="rounded-xl">
-                {courses.map((key) => {
-                  const config = pieChartConfig[key as keyof typeof pieChartConfig]
-                  if (!config) {
-                    return null
-                  }
-                  return (
-                    <SelectItem
-                      key={key}
-                      value={key}
-                      className="rounded-lg [&_span]:flex"
-                    >
-                      <div className="flex items-center gap-2 text-xs">
-                        <span
-                          className="flex h-3 w-3 shrink-0 rounded-xs"
-                          style={{
-                            backgroundColor: `var(--color-${key})`,
-                          }}
-                        />
-                        {config?.label}
-                      </div>
-                    </SelectItem>
-                  )
-                })}
+              <SelectContent className="bg-slate-900 border-slate-800 text-slate-200">
+                {courses.map(c => (
+                  <SelectItem key={c.course} value={c.course}>{c.name}</SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </CardHeader>
-          <CardContent className="flex flex-1 justify-center pb-0">
-            <ChartContainer
-              id={id}
-              config={pieChartConfig}
-              className="mx-auto aspect-square w-full max-w-[300px]"
-            >
+          <CardContent>
+            <ChartContainer config={pieChartConfig} className="mx-auto aspect-square max-h-[250px]">
               <PieChart>
-                <ChartTooltip
-                  cursor={false}
-                  content={<ChartTooltipContent hideLabel />}
-                />
+                <ChartTooltip content={<ChartTooltipContent hideLabel />} />
                 <Pie
-                  data={courseData}
-                  dataKey="desktop"
-                  nameKey="course"
+                  data={courses}
+                  dataKey="intake"
+                  nameKey="name"
                   innerRadius={60}
-                  strokeWidth={5}
+                  strokeWidth={8}
+                  stroke="#0f172a"
                   activeIndex={activeIndex}
-                  activeShape={({
-                    outerRadius = 0,
-                    ...props
-                  }) => (
+                  activeShape={({ outerRadius = 0, ...props }) => (
                     <g>
-                      <Sector {...props} outerRadius={outerRadius + 10} />
-                      <Sector
-                        {...props}
-                        outerRadius={outerRadius + 25}
-                        innerRadius={outerRadius + 12}
-                      />
+                      <Sector {...props} outerRadius={outerRadius + 8} />
+                      <Sector {...props} outerRadius={outerRadius + 15} innerRadius={outerRadius + 10} />
                     </g>
                   )}
                 >
@@ -231,25 +156,12 @@ const AdminDashboard = () => {
                     content={({ viewBox }) => {
                       if (viewBox && "cx" in viewBox && "cy" in viewBox) {
                         return (
-                          <text
-                            x={viewBox.cx}
-                            y={viewBox.cy}
-                            textAnchor="middle"
-                            dominantBaseline="middle"
-                          >
-                            <tspan
-                              x={viewBox.cx}
-                              y={viewBox.cy}
-                              className="fill-foreground text-3xl font-bold"
-                            >
-                              {courseData[activeIndex].desktop.toLocaleString()}
+                          <text x={viewBox.cx} y={viewBox.cy} textAnchor="middle" dominantBaseline="middle">
+                            <tspan x={viewBox.cx} y={viewBox.cy} className="fill-white text-2xl font-black">
+                              {courses[activeIndex]?.intake}
                             </tspan>
-                            <tspan
-                              x={viewBox.cx}
-                              y={(viewBox.cy || 0) + 24}
-                              className="fill-muted-foreground"
-                            >
-                              Students
+                            <tspan x={viewBox.cx} y={(viewBox.cy || 0) + 20} className="fill-slate-500 text-[10px] uppercase font-bold">
+                              Seats
                             </tspan>
                           </text>
                         )
@@ -261,55 +173,80 @@ const AdminDashboard = () => {
             </ChartContainer>
           </CardContent>
         </Card>
-      </div>
 
-      {/* --- DATA TABLE SECTION --- */}
-      <Card className="shadow-sm">
-        <CardHeader>
-          <CardTitle>Recent Applications</CardTitle>
-          <CardDescription>Manage and verify student document submissions</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow className="">
-                <TableHead className="w-[100px]">ID</TableHead>
-                <TableHead>Student Name</TableHead>
-                <TableHead>Course</TableHead>
-                <TableHead>Submission Date</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="text-right">Action</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {students.map((student) => (
-                <TableRow key={student.id}>
-                  <TableCell className="font-medium">{student.id}</TableCell>
-                  <TableCell>{student.name}</TableCell>
-                  <TableCell>{student.course}</TableCell>
-                  <TableCell>{student.date}</TableCell>
-                  <TableCell>
-                    <Badge 
-                      variant={
-                        student.status === "Verified" ? "success" : 
-                        student.status === "Rejected" ? "destructive" : "outline"
-                      }
-                      className={student.status === "Verified" ? "bg-emerald-100 text-emerald-700 border-none" : ""}
-                    >
-                      {student.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <button className="text-sm text-primary font-medium hover:underline">View Details</button>
-                  </TableCell>
+        {/* --- RECENT APPLICATIONS TABLE --- */}
+        <Card className="md:col-span-2 bg-slate-900 border-slate-800 shadow-2xl">
+          <CardHeader>
+            <CardTitle className="text-xl font-bold text-white flex items-center gap-2">
+              <CheckCircle className="text-cyan-500" size={20} />
+              Incoming Applications
+            </CardTitle>
+            <CardDescription className="text-slate-400 italic">Latest submissions from prospective students</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader className="bg-slate-950/50">
+                <TableRow className="border-slate-800 hover:bg-transparent">
+                  <TableHead className="text-slate-500 font-bold uppercase text-[10px]">Student</TableHead>
+                  <TableHead className="text-slate-500 font-bold uppercase text-[10px]">Course ID</TableHead>
+                  <TableHead className="text-slate-500 font-bold uppercase text-[10px]">Status</TableHead>
+                  <TableHead className="text-right text-slate-500 font-bold uppercase text-[10px]">Action</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+              </TableHeader>
+              <TableBody>
+                {applications.length > 0 ? applications.map((app) => (
+                  <TableRow key={app.id} className="border-slate-800 hover:bg-slate-800/30 transition-colors">
+                    <TableCell className="font-medium">
+                        <div className="text-slate-200">{app.studentName}</div>
+                        <div className="text-[10px] text-slate-500">{app.email}</div>
+                    </TableCell>
+                    <TableCell className="text-xs text-slate-400 font-mono">{app.courseId?.substring(0,8)}...</TableCell>
+                    <TableCell>
+                      <Badge className={`${
+                        app.status === "Verified" ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" : 
+                        "bg-amber-500/10 text-amber-400 border-amber-500/20"
+                      } rounded-full px-3 text-[10px] uppercase font-black`}>
+                        {app.status || "Pending"}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-right">
+  <button 
+    onClick={() => navigate(`/admin/application/${app.id}`)} // Use the dynamic ID
+    className="text-[10px] uppercase font-black text-cyan-500 hover:text-cyan-400 tracking-tighter transition-colors"
+  >
+    Review Details
+  </button>
+</TableCell>
+                  </TableRow>
+                )) : (
+                    <TableRow><TableCell colSpan={4} className="text-center py-10 text-slate-600">No applications yet.</TableCell></TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   )
 }
 
-export default AdminDashboard
+// --- UPDATED STAT CARD WITH LINK STYLES ---
+function StatMiniCard({ icon, label, value, isLink = false }: { icon: any, label: string, value: any, isLink?: boolean }) {
+    return (
+        <div className={`
+          relative bg-slate-900 border border-slate-800 p-3 rounded-2xl flex items-center gap-4 min-w-[150px] transition-all duration-300
+          ${isLink ? "hover:border-cyan-500/50 hover:bg-slate-800/50 hover:shadow-[0_0_15px_rgba(6,182,212,0.1)] group" : ""}
+        `}>
+            <div className={`p-2 rounded-xl transition-colors ${isLink ? "bg-cyan-500/10 text-cyan-400 group-hover:bg-cyan-500 group-hover:text-slate-950" : "bg-slate-800 text-slate-400"}`}>
+              {icon}
+            </div>
+            <div className="flex-1">
+                <p className="text-[10px] uppercase font-bold text-slate-500 tracking-tight">{label}</p>
+                <div className="flex items-center justify-between">
+                  <p className="text-xl font-black text-white leading-none">{value}</p>
+                  {isLink && <ArrowUpRight className="h-3 w-3 text-slate-600 group-hover:text-cyan-400 transition-colors" />}
+                </div>
+            </div>
+        </div>
+    )
+}
