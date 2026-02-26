@@ -1,3 +1,5 @@
+"use client"
+
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -15,20 +17,41 @@ import {
 
 // --- FIREBASE IMPORTS ---
 import { db } from "../../firebase/db";
-import {  auth } from "../../firebase/auth";
-import { collection, onSnapshot, query, orderBy } from "firebase/firestore";
-import { signOut } from "firebase/auth";
+import { auth } from "../../firebase/auth";
+import { collection, onSnapshot, query, orderBy, where, limit } from "firebase/firestore";
+import { signOut, onAuthStateChanged } from "firebase/auth";
 
 const Home = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [courses, setCourses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [appStatus, setAppStatus] = useState<string | null>(null); // Track live status
   const navigate = useNavigate();
 
-  // 1. FETCH REAL DATA FROM FIREBASE
+  // 1. FETCH COURSES & TRACK USER APPLICATION STATUS
   useEffect(() => {
-    const q = query(collection(db, "courses"), orderBy("createdAt", "desc"));
-    const unsubscribe = onSnapshot(q, (snapshot) => {
+    // Listen for Auth changes to ensure we have the user email
+    const authUnsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user?.email) {
+        // Query for the student's latest application status
+        const qApp = query(
+          collection(db, "applications"),
+          where("studentEmail", "==", user.email),
+          orderBy("createdAt", "desc"),
+          limit(1)
+        );
+
+        onSnapshot(qApp, (snapshot) => {
+          if (!snapshot.empty) {
+            setAppStatus(snapshot.docs[0].data().status);
+          }
+        });
+      }
+    });
+
+    // Fetch Courses
+    const qCourses = query(collection(db, "courses"), orderBy("createdAt", "desc"));
+    const coursesUnsubscribe = onSnapshot(qCourses, (snapshot) => {
       const fetchedCourses = snapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
@@ -36,7 +59,11 @@ const Home = () => {
       setCourses(fetchedCourses);
       setLoading(false);
     });
-    return () => unsubscribe();
+
+    return () => {
+      authUnsubscribe();
+      coursesUnsubscribe();
+    };
   }, []);
 
   // 2. YOUTUBE URL FORMATTER
@@ -77,12 +104,16 @@ const Home = () => {
         </div>
 
         <div className="flex items-center space-x-3">
+          {/* LIVE STATUS BUTTON (Desktop) */}
           <div className="hidden md:block group/status relative">
-            <div className="absolute -inset-1 bg-cyan-500 rounded-lg blur opacity-0 group-hover/status:opacity-30 transition duration-500"></div>
-            <Button asChild variant="outline" className="relative border-slate-700 bg-slate-800/50 text-slate-300 hover:text-cyan-400 hover:border-cyan-500/50 transition-all">
+            <div className={`absolute -inset-1 rounded-lg blur opacity-0 group-hover/status:opacity-30 transition duration-500 ${appStatus ? 'bg-cyan-500 opacity-20' : 'bg-slate-500'}`}></div>
+            <Button asChild variant="outline" className={`relative border-slate-700 bg-slate-800/50 transition-all ${appStatus ? 'text-cyan-400 border-cyan-500/40' : 'text-slate-300'}`}>
               <Link to="/student/statuspage" className="flex items-center gap-2">
                 <Info className="h-4 w-4" />
-                Check Status
+                {appStatus ? `Status: ${appStatus}` : "Check Status"}
+                {appStatus && (
+                  <span className="flex h-2 w-2 rounded-full bg-cyan-500 animate-pulse" />
+                )}
               </Link>
             </Button>
           </div>
@@ -195,9 +226,12 @@ const Home = () => {
             <HomeIcon className="h-5 w-5 mb-1" />
             <span className="text-[10px]">FEED</span>
           </Link>
-          <Link to="/student/statuspage" className="flex flex-col items-center text-slate-500 hover:text-cyan-400 transition-colors">
-            <Info className="h-5 w-5 mb-1" />
-            <span className="text-[10px]">CHECK STATUS</span>
+          <Link to="/student/statuspage" className={`flex flex-col items-center transition-colors ${appStatus ? 'text-cyan-400' : 'text-slate-500'}`}>
+            <div className="relative">
+              <Info className="h-5 w-5 mb-1" />
+              {appStatus && <span className="absolute -top-1 -right-1 h-2 w-2 bg-cyan-500 rounded-full animate-ping" />}
+            </div>
+            <span className="text-[10px]">{appStatus ? appStatus.toUpperCase() : "STATUS"}</span>
           </Link>
       </div>
     </div>

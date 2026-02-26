@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useState, useEffect, useMemo } from "react"
-import { useNavigate,Link } from "react-router-dom" // Import navigate
+import { useNavigate,Link } from "react-router-dom"
 import { Pie, PieChart, Sector, Label } from "recharts"
 import {
   ChartContainer,
@@ -34,12 +34,14 @@ import {
 import { Badge } from "@/components/ui/badge"
 import { GraduationCap, Loader2, Users, FileText, CheckCircle, ArrowUpRight } from "lucide-react"
 
-// --- FIREBASE IMPORTS ---
+// --- FIREBASE IMPORTS ...........
 import { db } from "../../firebase/db"
 import { collection, onSnapshot, query, orderBy, limit } from "firebase/firestore"
 
 export default function AdminDashboard() {
-  const navigate = useNavigate() // Hook for navigation
+  const navigate = useNavigate() // Hook for navigate the admin !!!!!!!!!!!!!!!!!!!!
+
+
   const [applications, setApplications] = useState<any[]>([])
   const [courses, setCourses] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
@@ -100,6 +102,9 @@ export default function AdminDashboard() {
         </div>
         
         <div className="flex gap-4">
+
+
+
             {/* CLICKABLE COURSE CARD */}
             <button 
               onClick={() => navigate("/admin/managecourses")}
@@ -209,9 +214,18 @@ export default function AdminDashboard() {
                         {app.status || "Pending"}
                       </Badge>
                     </TableCell>
+             
+             
+             
                     <TableCell className="text-right">
   <button 
-    onClick={() => navigate(`/admin/application/${app.id}`)} // Use the dynamic ID
+    onClick={() => navigate(`/admin/application/${app.id}`)} 
+        
+    
+    // dynamic ID per application change hbe //
+
+
+
     className="text-[10px] uppercase font-black text-cyan-500 hover:text-cyan-400 tracking-tighter transition-colors"
   >
     Review Details
@@ -230,7 +244,13 @@ export default function AdminDashboard() {
   )
 }
 
-// --- UPDATED STAT CARD WITH LINK STYLES ---
+
+
+
+
+
+// --- UPDATED STAT CARD WITH LINK STYLES ---//
+
 function StatMiniCard({ icon, label, value, isLink = false }: { icon: any, label: string, value: any, isLink?: boolean }) {
     return (
         <div className={`

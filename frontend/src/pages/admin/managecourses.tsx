@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom"; // Added for routing
+import { useNavigate } from "react-router-dom";
 import { 
   Plus, Edit2, BookOpen, Clock, Users, GraduationCap, 
   Loader2, Trash2, School, ArrowLeft 
@@ -26,6 +26,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
+
+
+
 // --- FIREBASE IMPORTS ---
 import { db } from "../../firebase/db";
 import { 
@@ -40,11 +43,16 @@ import {
   orderBy
 } from "firebase/firestore";
 
+
+
+
 export default function ManageCourses() {
   const [courses, setCourses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const navigate = useNavigate(); // Initialize navigation hook
-
+  const navigate = useNavigate(); 
+  
+  
+  
   useEffect(() => {
     const q = query(collection(db, "courses"), orderBy("createdAt", "desc"));
     const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -61,9 +69,18 @@ export default function ManageCourses() {
   return (
     <div className="p-8 space-y-8 min-h-screen bg-slate-950 text-slate-50 selection:bg-cyan-500/30">
       
+
+
+
       {/* --- HEADER --- */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div className="space-y-4">
+
+
+
+
+
+
           {/* BACK TO DASHBOARD BUTTON */}
           <button 
             onClick={() => navigate("/admin/dashboard")}
@@ -123,7 +140,7 @@ function CourseMediaRenderer({ url, className }: { url: string, className?: stri
     return <iframe className={className} src={`https://www.youtube.com/embed/${videoId}`} title="Course Video" allowFullScreen></iframe>;
   }
   if (isVideo) return <video src={url} className={className} controls muted />;
-  return <img src={url} alt="Course Media" className={className} onError={(e) => (e.currentTarget.src = "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4")} />;
+  return <img src={url} alt="Course Media" className={className} onError={(e) => (e.currentTarget.src = "https://www.ndtv.com/news/tumse%20na%20ho%20payega.png")} />;
 }
 
 function CourseCard({ course }: { course: any }) {
@@ -167,6 +184,15 @@ function CourseCard({ course }: { course: any }) {
   );
 }
 
+
+
+
+
+
+
+
+
+
 // ... (AddCourseDialog and EditCourseDialog remain largely the same, but ensure they close properly)
 function AddCourseDialog() {
   const [open, setOpen] = useState(false);
@@ -201,17 +227,17 @@ function AddCourseDialog() {
       <DialogContent className="bg-slate-900 border-slate-800 text-slate-100 sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
         <form onSubmit={handleAdd} className="space-y-4">
           <DialogHeader>
-            <DialogTitle className="text-cyan-400 text-2xl font-bold italic">Launch New Program</DialogTitle>
+            <DialogTitle className="text-cyan-400 text-2xl font-bold areal">Launch New Program</DialogTitle>
           </DialogHeader>
           <div className="grid gap-4 py-2">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label className="text-slate-400 text-xs uppercase tracking-tighter">Course Title</Label>
-                <Input className="bg-slate-950 border-slate-800" placeholder="e.g. B.Tech CS" value={formData.name} onChange={(e)=>setFormData({...formData, name: e.target.value})} required />
+                <Input className="bg-slate-950 border-slate-800" placeholder="e.g. BCA" value={formData.name} onChange={(e)=>setFormData({...formData, name: e.target.value})} required />
               </div>
               <div className="space-y-2">
                 <Label className="text-slate-400 text-xs uppercase tracking-tighter">Institution Name</Label>
-                <Input className="bg-slate-950 border-slate-800" placeholder="e.g. MIT University" value={formData.collegeName} onChange={(e)=>setFormData({...formData, collegeName: e.target.value})} required />
+                <Input className="bg-slate-950 border-slate-800" placeholder="full institution name " value={formData.collegeName} onChange={(e)=>setFormData({...formData, collegeName: e.target.value})} required />
               </div>
             </div>
             <div className="space-y-2">
@@ -221,22 +247,22 @@ function AddCourseDialog() {
             <div className="grid grid-cols-3 gap-4">
               <div className="space-y-2">
                 <Label className="text-slate-400 text-xs uppercase tracking-tighter">Duration</Label>
-                <Input className="bg-slate-950 border-slate-800" placeholder="4 Years" value={formData.duration} onChange={(e)=>setFormData({...formData, duration: e.target.value})} required />
+                <Input className="bg-slate-950 border-slate-800" placeholder="e.g 4 Years" value={formData.duration} onChange={(e)=>setFormData({...formData, duration: e.target.value})} required />
               </div>
               <div className="space-y-2">
-                <Label className="text-slate-400 text-xs uppercase tracking-tighter">Fees</Label>
-                <Input className="bg-slate-950 border-slate-800" placeholder="$5,000" value={formData.fees} onChange={(e)=>setFormData({...formData, fees: e.target.value})} required />
+                <Label className="text-slate-400 text-xs uppercase tracking-tighter">total Fees</Label>
+                <Input className="bg-slate-950 border-slate-800" placeholder="e.g 4 lakh" value={formData.fees} onChange={(e)=>setFormData({...formData, fees: e.target.value})} required />
               </div>
               <div className="space-y-2">
                 <Label className="text-slate-400 text-xs uppercase tracking-tighter">Seats</Label>
-                <Input type="number" className="bg-slate-950 border-slate-800" value={formData.intake} onChange={(e)=>setFormData({...formData, intake: e.target.value})} required />
+                <Input type="number" className="bg-slate-950 border-slate-800" placeholder="total seats...." value={formData.intake} onChange={(e)=>setFormData({...formData, intake: e.target.value})} required />
               </div>
             </div>
             <div className="space-y-2">
               <Label className="text-slate-400 text-xs uppercase tracking-tighter">Full Description</Label>
               <textarea 
                 className="flex min-h-[100px] w-full rounded-md border border-slate-800 bg-slate-950 px-3 py-2 text-sm focus:border-cyan-500 outline-none"
-                placeholder="Talk about placements, curriculum..."
+                placeholder="your institution's placements, curriculum..............."
                 value={formData.description}
                 onChange={(e)=>setFormData({...formData, description: e.target.value})}
                 required

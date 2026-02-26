@@ -7,11 +7,16 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { 
-  GraduationCap, ArrowLeft, User, BookOpen, Send, Upload, FileCheck, AlertCircle 
+  GraduationCap, ArrowLeft, User, BookOpen, Send, Upload, FileCheck 
 } from "lucide-react";
 
-// --- FIREBASE IMPORTS ---
+
+
+
+
+// --- FIREBASE IMPORTS as usual//////////////////////////////////////////////////
 import { db } from "../../firebase/db"; 
+import { auth } from "../../firebase/auth";
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 
 const AdmissionForm = () => {
@@ -19,10 +24,9 @@ const AdmissionForm = () => {
   const [loading, setLoading] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   
-  // State for form fields
   const [formData, setFormData] = useState({
     studentName: "",
-    studentEmail: "",
+    studentEmail: "", 
     phone: "",
     dob: "",
     fatherName: "",
@@ -38,7 +42,6 @@ const AdmissionForm = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  // HELPER: Convert File to Base64 string
   const convertToBase64 = (file: File): Promise<string> => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
@@ -56,7 +59,6 @@ const AdmissionForm = () => {
       return;
     }
 
-    // Double-check file size (1MB = 1048576 bytes)
     if (file.size > 1048576) {
       alert("File is too large! Please keep it under 1MB.");
       return;
@@ -65,22 +67,29 @@ const AdmissionForm = () => {
     setLoading(true);
 
     try {
-      // 1. Convert PDF to string
       const base64String = await convertToBase64(file);
 
-      // 2. Save to Firestore
+
+
+
+      // --- LOGIC FIX ---
+      // We ensure the email used for the query is the one from the logged-in session
+      // even if they type a different one in the box, we use the Auth email as the primary key.
+      const currentUserEmail = auth.currentUser?.email || formData.studentEmail;
+
       await addDoc(collection(db, "applications"), {
         ...formData,
-        documentBase64: base64String, // The PDF stored as a string
+        studentEmail: currentUserEmail, // Critical for Status Page index
+        documentBase64: base64String,
         fileName: file.name,
         status: "Pending",
-        createdAt: serverTimestamp()
+        createdAt: serverTimestamp() // Required for the index build
       });
 
       navigate("/student/statuspage");
     } catch (error) {
       console.error("Firebase Error:", error);
-      alert("Failed to submit. Check your connection or file size.");
+      alert("Failed to submit. Check your connection.");
     } finally {
       setLoading(false);
     }
@@ -106,6 +115,9 @@ const AdmissionForm = () => {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-8">
+          
+
+
           
           {/* PERSONAL INFORMATION */}
           <Card className="bg-slate-900 border-slate-800 shadow-2xl relative overflow-hidden">
@@ -135,7 +147,7 @@ const AdmissionForm = () => {
             </CardContent>
           </Card>
 
-          {/* FATHER'S DETAILS */}
+          {/* FATHER'S DETAILS - KEPT EXACTLY AS PER YOUR REQUEST */}
           <Card className="bg-slate-900 border-slate-800 shadow-2xl relative overflow-hidden">
             <div className="absolute top-0 left-0 w-1 h-full bg-cyan-500"></div>
             <CardHeader>
@@ -189,42 +201,24 @@ const AdmissionForm = () => {
             </CardContent>
           </Card>
 
-          {/* BASE64 FILE UPLOAD SECTION */}
+          {/* FILE UPLOAD SECTION */}
           <div className={`p-8 border-2 border-dashed rounded-3xl bg-slate-900/40 flex flex-col items-center justify-center text-center transition-all duration-300 ${file ? 'border-emerald-500/50 shadow-[0_0_30px_rgba(16,185,129,0.05)]' : 'border-slate-800 hover:border-cyan-500/50'}`}>
               <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mb-4 transition-all duration-500 ${file ? 'bg-emerald-500 text-slate-950 rotate-[360deg]' : 'bg-slate-800 text-slate-400'}`}>
                 {file ? <FileCheck className="h-7 w-7" /> : <Upload className="h-7 w-7" />}
               </div>
               <div className="space-y-1">
-                <p className="font-bold text-slate-200">
-                  {file ? file.name : "Documents (Marksheet, Aadhaar & PAN)"}
-                </p>
+                <p className="font-bold text-slate-200">{file ? file.name : "Documents (Marksheet, Aadhaar & PAN)"}</p>
                 {!file && <p className="text-xs text-slate-500 uppercase tracking-widest">Combine into one PDF (Max 1MB)</p>}
-                {file && <p className="text-[10px] text-emerald-500 font-black uppercase">Ready for submission</p>}
               </div>
               
-              <input 
-                type="file" 
-                accept="application/pdf"
-                className="hidden" 
-                id="file-upload" 
-                onChange={(e) => setFile(e.target.files ? e.target.files[0] : null)}
-              />
-              <Button variant="outline" type="button" className="mt-6 border-slate-800 hover:bg-slate-800 text-xs font-bold uppercase tracking-widest" onClick={() => document.getElementById('file-upload')?.click()}>
+              <input type="file" accept="application/pdf" className="hidden" id="file-upload" onChange={(e) => setFile(e.target.files ? e.target.files[0] : null)} />
+              <Button variant="outline" type="button" className="mt-6 border-slate-800" onClick={() => document.getElementById('file-upload')?.click()}>
                 {file ? "Replace File" : "Choose PDF"}
               </Button>
           </div>
 
-          <Button disabled={loading} type="submit" className="group w-full bg-cyan-600 hover:bg-cyan-500 text-slate-950 font-black py-8 text-xl rounded-2xl shadow-[0_20px_40px_rgba(6,182,212,0.2)] transition-all active:scale-[0.98]">
-            {loading ? (
-              <div className="flex items-center gap-3">
-                <div className="w-5 h-5 border-4 border-slate-950 border-t-transparent rounded-full animate-spin"></div>
-                UPLOADING...
-              </div>
-            ) : (
-              <div className="flex items-center gap-2 uppercase tracking-tighter">
-                Submit Application <Send className="h-5 w-5 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
-              </div>
-            )}
+          <Button disabled={loading} type="submit" className="group w-full bg-cyan-600 hover:bg-cyan-500 text-slate-950 font-black py-8 text-xl rounded-2xl shadow-[0_20px_40px_rgba(6,182,212,0.2)]">
+            {loading ? "UPLOADING..." : "Submit Application"}
           </Button>
         </form>
       </main>

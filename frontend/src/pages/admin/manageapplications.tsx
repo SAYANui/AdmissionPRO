@@ -38,7 +38,12 @@ export default function ManageApplication() {
     setApp({ ...app, status: newStatus })
   }
 
-  // Function to open the Base64 PDF in a new tab
+
+
+
+
+  
+  // (Function to open the Base64 PDF in a new tab)
   const openPdf = () => {
     if (app?.documentBase64) {
       const newWindow = window.open()
@@ -63,6 +68,11 @@ export default function ManageApplication() {
       </Button>
 
       <div className="max-w-4xl mx-auto grid gap-6 md:grid-cols-3">
+
+
+
+
+
         
         {/* LEFT COLUMN: STUDENT INFO */}
         <div className="md:col-span-2 space-y-6">
@@ -100,6 +110,10 @@ export default function ManageApplication() {
             </CardContent>
           </Card>
 
+
+
+
+
           {/* DOCUMENT SECTION */}
           <Card className="bg-slate-900 border-slate-800">
              <CardContent className="p-6 flex items-center justify-between">
@@ -118,6 +132,11 @@ export default function ManageApplication() {
              </CardContent>
           </Card>
         </div>
+
+
+
+
+
 
         {/* RIGHT COLUMN: ACTIONS */}
         <div className="space-y-6">

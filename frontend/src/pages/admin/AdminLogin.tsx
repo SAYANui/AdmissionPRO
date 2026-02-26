@@ -14,8 +14,12 @@ import { Label } from "@/components/ui/label"
 import { Link, useNavigate } from "react-router-dom"
 import { Eye, EyeOff, Home, GraduationCap, Loader2, AlertCircle } from "lucide-react"
 
-// --- FIREBASE IMPORTS ---
-import { auth } from "../../firebase/auth" // Adjust this path to your firebase config
+// --- FIREBASE IMPORTS are here ........................asish bkl dekh
+
+
+
+
+import { auth } from "../../firebase/auth"
 import { signInWithEmailAndPassword } from "firebase/auth"
 
 const AdminLogin = () => {
@@ -53,13 +57,18 @@ const AdminLogin = () => {
     <div className="flex items-center justify-center min-h-screen bg-slate-950 p-6 selection:bg-cyan-500/30 font-sans">
       <div className="group relative w-full max-w-md">
         
-        {/* EXTERNAL CARD GLOW */}
+        {/* EXTERNAL CARD GLOW   (pore add hoa6e)*/}
         <div className="absolute -inset-1 bg-gradient-to-r from-cyan-600 to-blue-600 rounded-xl blur-2xl opacity-20 group-hover:opacity-40 transition duration-1000 group-hover:duration-200"></div>
 
         <Card className="relative w-full border-none bg-slate-900 text-slate-50 shadow-2xl overflow-hidden">
           
           <CardHeader className="space-y-4 pt-8">
             <div className="flex items-center justify-between w-full">
+
+
+
+
+
               {/* Glowing Logo Box */}
               <div className="group/logo relative">
                 <div className="absolute -inset-1 bg-cyan-500 rounded-lg blur opacity-20 group-hover/logo:opacity-60 transition duration-500"></div>
@@ -91,6 +100,12 @@ const AdminLogin = () => {
           
           <form onSubmit={handleLogin}>
             <CardContent className="grid gap-6">
+
+
+
+
+
+              
               {/* ERROR ALERT */}
               {error && (
                 <div className="flex items-center gap-2 bg-red-500/10 border border-red-500/20 text-red-400 p-3 rounded-lg text-xs animate-in fade-in zoom-in duration-300">
@@ -106,7 +121,7 @@ const AdminLogin = () => {
                   type="email" 
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="admin@institution.com" 
+                  placeholder="admin@email.com" 
                   required
                   className="bg-slate-800/50 border-slate-700 text-slate-100 focus-visible:ring-cyan-500 focus-visible:border-cyan-500 transition-all"
                 />

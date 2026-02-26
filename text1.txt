@@ -3,7 +3,8 @@ AdmissionPRO
 ├── frontend/
 │   │
 │   ├── src/
-│   │   ├── components/
+│   │   ├── components/ui 
+|   |   |   |
 │   │   │   ├── Navbar.jsx
 │   │   │   ├── Footer.jsx
 │   │   │   ├── CourseCard.jsx

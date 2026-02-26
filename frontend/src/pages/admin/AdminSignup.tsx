@@ -12,7 +12,9 @@ import { Label } from "@/components/ui/label"
 import { Link, useNavigate } from "react-router-dom"
 import { Eye, EyeOff, Home, GraduationCap, Loader2 } from "lucide-react" 
 
-// --- FIREBASE IMPORTS ---
+
+
+// --- FIREBASE IMPORTS  same jerom 6ilo login e //
 import {  db } from "../../firebase/db" 
 import{auth} from "../../firebase/auth"
 
@@ -32,7 +34,7 @@ const AdminSignup = () => {
     password: ""
   })
 
-  const handleSignup = async (e) => {
+  const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
     try {
@@ -44,6 +46,11 @@ const AdminSignup = () => {
       )
       const user = userCredential.user
 
+
+
+
+
+
       // 2. Save Admin Info to Firestore
       await setDoc(doc(db, "admins", user.uid), {
         adminName: formData.name,
@@ -53,12 +60,16 @@ const AdminSignup = () => {
         createdAt: serverTimestamp()
       })
 
-      // 3. Success! Move to Admin Dashboard
+      // 3. iffffffffff  Success Move to Admin Dashboard💦💦
       navigate("/admin/dashboard")
     } catch (error) {
-      console.error("Signup Error:", error)
-      alert(error.message)
-    } finally {
+  console.error("Signup Error:", error);
+  if (error instanceof Error) {
+    alert(error.message); // No more red line!
+  } else {
+    alert("An unexpected error occurred");
+  }
+} finally {
       setLoading(false)
     }
   }
@@ -111,7 +122,7 @@ const AdminSignup = () => {
                   id="name" 
                   type="text" 
                   required
-                  placeholder="e.g. Dr. John Doe" 
+                  placeholder="your full name " 
                   className="bg-slate-800/50 border-slate-700 text-slate-100 focus-visible:ring-cyan-500 focus-visible:border-cyan-500 transition-all"
                   onChange={(e) => setFormData({...formData, name: e.target.value})}
                 />
@@ -123,7 +134,7 @@ const AdminSignup = () => {
                   id="insname" 
                   type="text" 
                   required
-                  placeholder="e.g. Stanford University" 
+                  placeholder="full institution name" 
                   className="bg-slate-800/50 border-slate-700 text-slate-100 focus-visible:ring-cyan-500 focus-visible:border-cyan-500 transition-all"
                   onChange={(e) => setFormData({...formData, insname: e.target.value})}
                 />
@@ -135,7 +146,7 @@ const AdminSignup = () => {
                   id="email" 
                   type="email" 
                   required
-                  placeholder="admin@institution.edu" 
+                  placeholder="admin@email.com" 
                   className="bg-slate-800/50 border-slate-700 text-slate-100 focus-visible:ring-cyan-500 focus-visible:border-cyan-500 transition-all"
                   onChange={(e) => setFormData({...formData, email: e.target.value})}
                 />

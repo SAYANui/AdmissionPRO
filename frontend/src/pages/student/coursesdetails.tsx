@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { 
-  ArrowLeft, GraduationCap, Calendar, DollarSign, Users, Award, CheckCircle, Loader2 
+  ArrowLeft, GraduationCap, Calendar,IndianRupee, Users, Award, CheckCircle, Loader2 
 } from "lucide-react";
 // --- FIREBASE IMPORTS ---
 import { db } from "../../firebase/db";
@@ -106,7 +106,7 @@ const CourseDetails = () => {
               </div>
               <div className="space-y-1">
                 <div className="flex items-center gap-2 text-slate-500 text-sm uppercase font-bold tracking-tighter">
-                  <DollarSign className="h-4 w-4" /> Est. Fees
+                  <IndianRupee className="h-4 w-4" /> total Fees
                 </div>
                 <p className="text-xl font-bold text-cyan-400">{course.fees || "TBD"}</p>
               </div>
