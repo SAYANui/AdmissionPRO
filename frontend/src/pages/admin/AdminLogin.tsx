@@ -58,7 +58,7 @@ const AdminLogin = () => {
       <div className="group relative w-full max-w-md">
         
         {/* EXTERNAL CARD GLOW   (pore add hoa6e)*/}
-        <div className="absolute -inset-1 bg-gradient-to-r from-cyan-600 to-blue-600 rounded-xl blur-2xl opacity-20 group-hover:opacity-40 transition duration-1000 group-hover:duration-200"></div>
+        <div className="absolute -inset-1 bg-linear-to-r from-cyan-600 to-blue-600 rounded-xl blur-2xl opacity-20 group-hover:opacity-40 transition duration-1000 group-hover:duration-200"></div>
 
         <Card className="relative w-full border-none bg-slate-900 text-slate-50 shadow-2xl overflow-hidden">
           

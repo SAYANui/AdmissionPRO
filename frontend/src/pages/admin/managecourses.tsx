@@ -1,10 +1,10 @@
 "use client"
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { 
   Plus, Edit2, BookOpen, Clock, Users, GraduationCap, 
-  Loader2, Trash2, School, ArrowLeft 
+  Loader2, Trash2, School, ArrowLeft, RefreshCw 
 } from "lucide-react";
 import {
   Card,
@@ -26,15 +26,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-
-
-
 // --- FIREBASE IMPORTS ---
 import { db } from "../../firebase/db";
 import { 
   collection, 
   addDoc, 
-  onSnapshot, 
+  getDocs, // Changed from onSnapshot to getDocs
   updateDoc, 
   deleteDoc, 
   doc, 
@@ -43,44 +40,41 @@ import {
   orderBy
 } from "firebase/firestore";
 
-
-
-
 export default function ManageCourses() {
   const [courses, setCourses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const navigate = useNavigate(); 
   
-  
-  
-  useEffect(() => {
-    const q = query(collection(db, "courses"), orderBy("createdAt", "desc"));
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const courseData = snapshot.docs.map(doc => ({
+  // --- OPTIMIZED FETCH LOGIC ---
+  const fetchCourses = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      const q = query(collection(db, "courses"), orderBy("createdAt", "desc"));
+      const querySnapshot = await getDocs(q);
+      const courseData = querySnapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
       }));
       setCourses(courseData);
+    } catch (error) {
+      console.error("Error fetching courses:", error);
+    } finally {
       setLoading(false);
-    });
-    return () => unsubscribe();
+      setRefreshing(false);
+    }
   }, []);
+
+  useEffect(() => {
+    fetchCourses();
+  }, [fetchCourses]);
 
   return (
     <div className="p-8 space-y-8 min-h-screen bg-slate-950 text-slate-50 selection:bg-cyan-500/30">
       
-
-
-
       {/* --- HEADER --- */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div className="space-y-4">
-
-
-
-
-
-
           {/* BACK TO DASHBOARD BUTTON */}
           <button 
             onClick={() => navigate("/admin/dashboard")}
@@ -104,7 +98,19 @@ export default function ManageCourses() {
           </div>
         </div>
         
-        <AddCourseDialog />
+        <div className="flex items-center gap-4">
+          {/* REFRESH BUTTON */}
+          <Button 
+            variant="outline" 
+            size="icon" 
+            onClick={fetchCourses}
+            className="border-slate-800 bg-slate-900 text-slate-400 hover:text-cyan-400 transition-colors"
+            disabled={refreshing}
+          >
+            <RefreshCw size={18} className={`${refreshing ? "animate-spin" : ""}`} />
+          </Button>
+          <AddCourseDialog onCourseAdded={fetchCourses} />
+        </div>
       </div>
 
       {loading ? (
@@ -115,7 +121,7 @@ export default function ManageCourses() {
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {courses.length > 0 ? (
             courses.map((course) => (
-              <CourseCard key={course.id} course={course} />
+              <CourseCard key={course.id} course={course} onUpdate={fetchCourses} />
             ))
           ) : (
             <div className="col-span-full py-20 text-center border-2 border-dashed border-slate-800 rounded-3xl">
@@ -129,24 +135,26 @@ export default function ManageCourses() {
   );
 }
 
-// ... (CourseMediaRenderer stays the same)
+// --- REMAINING COMPONENTS (Style & Logic Preserved) ---
+
 function CourseMediaRenderer({ url, className }: { url: string, className?: string }) {
   if (!url) return <div className={`${className} bg-slate-800 flex items-center justify-center`}><BookOpen className="text-slate-600" size={40} /></div>;
   const isYoutube = url.includes("youtube.com") || url.includes("youtu.be");
   const isVideo = url.match(/\.(mp4|webm|ogg)$/i);
 
   if (isYoutube) {
-    const videoId = url.split('v=')[1]?.split('&')[0] || url.split('/').pop();
+    const videoId = url.split('v=')[1]?.split('&')[0] || url.split('/').pop() || url.split('embed/')[1];
     return <iframe className={className} src={`https://www.youtube.com/embed/${videoId}`} title="Course Video" allowFullScreen></iframe>;
   }
   if (isVideo) return <video src={url} className={className} controls muted />;
   return <img src={url} alt="Course Media" className={className} onError={(e) => (e.currentTarget.src = "https://www.ndtv.com/news/tumse%20na%20ho%20payega.png")} />;
 }
 
-function CourseCard({ course }: { course: any }) {
+function CourseCard({ course, onUpdate }: { course: any, onUpdate: () => void }) {
   const handleDelete = async () => {
     if(confirm("Delete this course permanently?")) {
       await deleteDoc(doc(db, "courses", course.id));
+      onUpdate();
     }
   };
 
@@ -155,11 +163,11 @@ function CourseCard({ course }: { course: any }) {
       <div className="absolute -inset-0.5 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-xl blur opacity-0 group-hover:opacity-10 transition duration-500"></div>
 
       <div className="relative h-44 w-full overflow-hidden border-b border-slate-800">
-         <CourseMediaRenderer url={course.mediaUrl} className="w-full h-full object-cover" />
-         <div className="absolute inset-0 bg-slate-950/60 flex items-center justify-center gap-3 opacity-0 group-hover:opacity-100 transition-all duration-300 z-20">
-            <EditCourseDialog course={course} />
-            <Button onClick={handleDelete} variant="destructive" size="sm" className="gap-2"><Trash2 size={14} /></Button>
-         </div>
+          <CourseMediaRenderer url={course.mediaUrl} className="w-full h-full object-cover" />
+          <div className="absolute inset-0 bg-slate-950/60 flex items-center justify-center gap-3 opacity-0 group-hover:opacity-100 transition-all duration-300 z-20">
+             <EditCourseDialog course={course} onUpdate={onUpdate} />
+             <Button onClick={handleDelete} variant="destructive" size="sm" className="gap-2"><Trash2 size={14} /></Button>
+          </div>
       </div>
 
       <CardHeader className="pb-2">
@@ -184,17 +192,7 @@ function CourseCard({ course }: { course: any }) {
   );
 }
 
-
-
-
-
-
-
-
-
-
-// ... (AddCourseDialog and EditCourseDialog remain largely the same, but ensure they close properly)
-function AddCourseDialog() {
+function AddCourseDialog({ onCourseAdded }: { onCourseAdded: () => void }) {
   const [open, setOpen] = useState(false);
   const [formData, setFormData] = useState({ 
     name: "", 
@@ -215,6 +213,7 @@ function AddCourseDialog() {
     });
     setOpen(false);
     setFormData({ name: "", collegeName: "", duration: "", intake: "", fees: "", description: "", mediaUrl: "" });
+    onCourseAdded();
   };
 
   return (
@@ -227,7 +226,7 @@ function AddCourseDialog() {
       <DialogContent className="bg-slate-900 border-slate-800 text-slate-100 sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
         <form onSubmit={handleAdd} className="space-y-4">
           <DialogHeader>
-            <DialogTitle className="text-cyan-400 text-2xl font-bold areal">Launch New Program</DialogTitle>
+            <DialogTitle className="text-cyan-400 text-2xl font-bold">Launch New Program</DialogTitle>
           </DialogHeader>
           <div className="grid gap-4 py-2">
             <div className="grid grid-cols-2 gap-4">
@@ -280,7 +279,7 @@ function AddCourseDialog() {
   )
 }
 
-function EditCourseDialog({ course }: { course: any }) {
+function EditCourseDialog({ course, onUpdate }: { course: any, onUpdate: () => void }) {
   const [open, setOpen] = useState(false);
   const [formData, setFormData] = useState({ ...course });
 
@@ -292,6 +291,7 @@ function EditCourseDialog({ course }: { course: any }) {
       intake: Number(formData.intake)
     });
     setOpen(false);
+    onUpdate();
   };
 
   return (
@@ -305,19 +305,19 @@ function EditCourseDialog({ course }: { course: any }) {
         <form onSubmit={handleUpdate} className="space-y-4">
           <DialogHeader><DialogTitle className="text-cyan-400">Modify {course.name}</DialogTitle></DialogHeader>
           <div className="grid gap-4 py-2">
-             <div className="grid grid-cols-2 gap-4">
-               <div className="space-y-1"><Label className="text-xs">Course Name</Label><Input value={formData.name} className="bg-slate-950 border-slate-800" onChange={(e)=>setFormData({...formData, name: e.target.value})} /></div>
-               <div className="space-y-1"><Label className="text-xs">Institution</Label><Input value={formData.collegeName} className="bg-slate-950 border-slate-800" onChange={(e)=>setFormData({...formData, collegeName: e.target.value})} /></div>
-             </div>
-             <div className="space-y-1"><Label className="text-xs">Media URL</Label><Input value={formData.mediaUrl} className="bg-slate-950 border-slate-800" onChange={(e)=>setFormData({...formData, mediaUrl: e.target.value})} /></div>
-             <div className="grid grid-cols-3 gap-4">
-                <div className="space-y-1"><Label className="text-xs">Duration</Label><Input value={formData.duration} className="bg-slate-950 border-slate-800" onChange={(e)=>setFormData({...formData, duration: e.target.value})} /></div>
-                <div className="space-y-1"><Label className="text-xs">Fees</Label><Input value={formData.fees} className="bg-slate-950 border-slate-800" onChange={(e)=>setFormData({...formData, fees: e.target.value})} /></div>
-                <div className="space-y-1"><Label className="text-xs">Seats</Label><Input type="number" value={formData.intake} className="bg-slate-950 border-slate-800" onChange={(e)=>setFormData({...formData, intake: e.target.value})} /></div>
-             </div>
-             <div className="space-y-1"><Label className="text-xs">Description</Label>
-               <textarea className="w-full bg-slate-950 border-slate-800 rounded-md p-2 text-sm h-24" value={formData.description} onChange={(e)=>setFormData({...formData, description: e.target.value})} />
-             </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1"><Label className="text-xs">Course Name</Label><Input value={formData.name} className="bg-slate-950 border-slate-800" onChange={(e)=>setFormData({...formData, name: e.target.value})} /></div>
+                <div className="space-y-1"><Label className="text-xs">Institution</Label><Input value={formData.collegeName} className="bg-slate-950 border-slate-800" onChange={(e)=>setFormData({...formData, collegeName: e.target.value})} /></div>
+              </div>
+              <div className="space-y-1"><Label className="text-xs">Media URL</Label><Input value={formData.mediaUrl} className="bg-slate-950 border-slate-800" onChange={(e)=>setFormData({...formData, mediaUrl: e.target.value})} /></div>
+              <div className="grid grid-cols-3 gap-4">
+                 <div className="space-y-1"><Label className="text-xs">Duration</Label><Input value={formData.duration} className="bg-slate-950 border-slate-800" onChange={(e)=>setFormData({...formData, duration: e.target.value})} /></div>
+                 <div className="space-y-1"><Label className="text-xs">Fees</Label><Input value={formData.fees} className="bg-slate-950 border-slate-800" onChange={(e)=>setFormData({...formData, fees: e.target.value})} /></div>
+                 <div className="space-y-1"><Label className="text-xs">Seats</Label><Input type="number" value={formData.intake} className="bg-slate-950 border-slate-800" onChange={(e)=>setFormData({...formData, intake: e.target.value})} /></div>
+              </div>
+              <div className="space-y-1"><Label className="text-xs">Description</Label>
+                <textarea className="w-full bg-slate-950 border-slate-800 rounded-md p-2 text-sm h-24" value={formData.description} onChange={(e)=>setFormData({...formData, description: e.target.value})} />
+              </div>
           </div>
           <DialogFooter><Button type="submit" className="w-full bg-cyan-600 hover:bg-cyan-500 text-slate-950 font-bold uppercase tracking-widest">Update Course</Button></DialogFooter>
         </form>

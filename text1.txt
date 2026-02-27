@@ -20,7 +20,7 @@ AdmissionPRO
 │   │   │   │   ├── AdmissionForm.jsx     // form fill
 │   │   │   │   ├── TrackStatus.jsx       // search by code
 │   │   │   │   ├── Payment.jsx           // pay after verified
-│   │   │   │   └── DownloadPDF.jsx       // final pdf
+│   │   │   │   └── DownloadPDF.jsx       // final pdf               *
 │   │   │
 │   │   │   └── admin/
 │   │   │       ├── AdminLogin.jsx

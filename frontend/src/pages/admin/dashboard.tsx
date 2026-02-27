@@ -1,7 +1,7 @@
 "use client"
 
-import React, { useState, useEffect, useMemo } from "react"
-import { useNavigate,Link } from "react-router-dom"
+import React, { useState, useEffect, useMemo, useCallback } from "react"
+import { useNavigate, Link } from "react-router-dom"
 import { Pie, PieChart, Sector, Label } from "recharts"
 import {
   ChartContainer,
@@ -32,57 +32,69 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
-import { GraduationCap, Loader2, Users, FileText, CheckCircle, ArrowUpRight } from "lucide-react"
+import { GraduationCap, Loader2, Users, FileText, CheckCircle, ArrowUpRight, RefreshCw } from "lucide-react"
+import { Button } from "@/components/ui/button"
 
-// --- FIREBASE IMPORTS ...........
+// --- FIREBASE IMPORTS ---
 import { db } from "../../firebase/db"
-import { collection, onSnapshot, query, orderBy, limit } from "firebase/firestore"
+import { collection, query, orderBy, limit, getDocs } from "firebase/firestore"
 
 export default function AdminDashboard() {
-  const navigate = useNavigate() // Hook for navigate the admin !!!!!!!!!!!!!!!!!!!!
-
-
+  const navigate = useNavigate()
   const [applications, setApplications] = useState<any[]>([])
   const [courses, setCourses] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  const [refreshing, setRefreshing] = useState(false)
   const [activeCourse, setActiveCourse] = useState<string>("")
 
-  useEffect(() => {
-    const qApps = query(collection(db, "applications"), orderBy("createdAt", "desc"), limit(5));
-    const unsubApps = onSnapshot(qApps, (snap) => {
-      setApplications(snap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
-    });
+  // --- OPTIMIZED DATA FETCH (Non-Realtime for Courses) ---
+  const fetchData = useCallback(async () => {
+    setRefreshing(true)
+    try {
+      // 1. Fetch Latest 5 Applications
+      const qApps = query(collection(db, "applications"), orderBy("createdAt", "desc"), limit(5))
+      const appSnap = await getDocs(qApps)
+      const appList = appSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }))
+      setApplications(appList)
 
-    const unsubCourses = onSnapshot(collection(db, "courses"), (snap) => {
-      const courseList = snap.docs.map(doc => ({
+      // 2. Fetch All Courses for Pie Chart
+      const courseSnap = await getDocs(collection(db, "courses"))
+      const courseList = courseSnap.docs.map((doc, index) => ({
         course: doc.id,
         name: doc.data().name,
         intake: doc.data().intake || 0,
-        fill: `var(--chart-${(snap.docs.indexOf(doc) % 5) + 1})`
-      }));
-      setCourses(courseList);
-      if (courseList.length > 0) setActiveCourse(courseList[0].course);
-      setLoading(false);
-    });
+        fill: `var(--chart-${(index % 5) + 1})`
+      }))
+      
+      setCourses(courseList)
+      if (courseList.length > 0 && !activeCourse) setActiveCourse(courseList[0].course)
+    } catch (error) {
+      console.error("Dashboard Load Error:", error)
+    } finally {
+      setLoading(false)
+      setRefreshing(false)
+    }
+  }, [activeCourse])
 
-    return () => { unsubApps(); unsubCourses(); };
-  }, []);
+  useEffect(() => {
+    fetchData()
+  }, []) // Runs once on mount
 
   const pieChartConfig = useMemo(() => {
-    const config: ChartConfig = { visitors: { label: "Seats" } };
+    const config: ChartConfig = { visitors: { label: "Seats" } }
     courses.forEach((c, index) => {
-      config[c.course] = { label: c.name, color: `var(--chart-${(index % 5) + 1})` };
-    });
-    return config;
-  }, [courses]);
+      config[c.course] = { label: c.name, color: `var(--chart-${(index % 5) + 1})` }
+    })
+    return config
+  }, [courses])
 
-  const activeIndex = useMemo(() => courses.findIndex((item) => item.course === activeCourse), [activeCourse, courses]);
+  const activeIndex = useMemo(() => courses.findIndex((item) => item.course === activeCourse), [activeCourse, courses])
 
   if (loading) return (
     <div className="min-h-screen bg-slate-950 flex items-center justify-center">
       <Loader2 className="h-10 w-10 animate-spin text-cyan-500" />
     </div>
-  );
+  )
 
   return (
     <div className="p-8 space-y-8 min-h-screen bg-slate-950 text-slate-50 selection:bg-cyan-500/30 font-sans">
@@ -93,19 +105,25 @@ export default function AdminDashboard() {
           <div className="flex items-center gap-2 bg-slate-900 border border-slate-800 w-fit px-4 py-1.5 rounded-full mb-2">
             <GraduationCap className="h-6 w-6 text-cyan-400" />
             <h1 className="text-4xl font-black tracking-tighter text-white">
-            Admission<span className="text-cyan-500">PRO</span>
-          </h1>
+              Admission<span className="text-cyan-500">PRO</span>
+            </h1>
           </div>
-          <Link to= "/" className="text-1*1 font-black tracking-tighter text-cyan-400">
-           logout
+          <Link to="/" className="text-xs font-black tracking-widest text-slate-500 hover:text-red-400 uppercase transition-colors">
+            Logout Session
           </Link>
         </div>
         
-        <div className="flex gap-4">
+        <div className="flex gap-4 items-center">
+            <Button 
+              variant="outline" 
+              size="icon" 
+              onClick={fetchData} 
+              disabled={refreshing}
+              className="border-slate-800 bg-slate-900 text-slate-400 hover:text-cyan-400"
+            >
+              <RefreshCw size={16} className={`${refreshing ? "animate-spin" : ""}`} />
+            </Button>
 
-
-
-            {/* CLICKABLE COURSE CARD */}
             <button 
               onClick={() => navigate("/admin/managecourses")}
               className="text-left transition-transform active:scale-95"
@@ -117,7 +135,7 @@ export default function AdminDashboard() {
                 isLink 
               />
             </button>
-            <StatMiniCard icon={<FileText size={16}/>} label="Applications" value={applications.length} />
+            <StatMiniCard icon={<FileText size={16}/>} label="Recent Apps" value={applications.length} />
         </div>
       </div>
 
@@ -128,7 +146,7 @@ export default function AdminDashboard() {
           <CardHeader className="flex-row items-center justify-between pb-2">
             <CardTitle className="text-lg font-bold text-slate-200">Seat Distribution</CardTitle>
             <Select value={activeCourse} onValueChange={setActiveCourse}>
-              <SelectTrigger className="w-[120px] bg-slate-950 border-slate-800 text-xs">
+              <SelectTrigger className="w-[120px] bg-slate-950 border-slate-800 text-xs text-slate-200">
                 <SelectValue placeholder="Select" />
               </SelectTrigger>
               <SelectContent className="bg-slate-900 border-slate-800 text-slate-200">
@@ -163,7 +181,7 @@ export default function AdminDashboard() {
                         return (
                           <text x={viewBox.cx} y={viewBox.cy} textAnchor="middle" dominantBaseline="middle">
                             <tspan x={viewBox.cx} y={viewBox.cy} className="fill-white text-2xl font-black">
-                              {courses[activeIndex]?.intake}
+                              {courses[activeIndex]?.intake || 0}
                             </tspan>
                             <tspan x={viewBox.cx} y={(viewBox.cy || 0) + 20} className="fill-slate-500 text-[10px] uppercase font-bold">
                               Seats
@@ -186,14 +204,14 @@ export default function AdminDashboard() {
               <CheckCircle className="text-cyan-500" size={20} />
               Incoming Applications
             </CardTitle>
-            <CardDescription className="text-slate-400 italic">Latest submissions from prospective students</CardDescription>
+            <CardDescription className="text-slate-400 italic text-xs uppercase tracking-widest">Previewing Latest 5 Submissions</CardDescription>
           </CardHeader>
           <CardContent>
             <Table>
               <TableHeader className="bg-slate-950/50">
                 <TableRow className="border-slate-800 hover:bg-transparent">
                   <TableHead className="text-slate-500 font-bold uppercase text-[10px]">Student</TableHead>
-                  <TableHead className="text-slate-500 font-bold uppercase text-[10px]">Course ID</TableHead>
+                  <TableHead className="text-slate-500 font-bold uppercase text-[10px]">Reference</TableHead>
                   <TableHead className="text-slate-500 font-bold uppercase text-[10px]">Status</TableHead>
                   <TableHead className="text-right text-slate-500 font-bold uppercase text-[10px]">Action</TableHead>
                 </TableRow>
@@ -202,38 +220,30 @@ export default function AdminDashboard() {
                 {applications.length > 0 ? applications.map((app) => (
                   <TableRow key={app.id} className="border-slate-800 hover:bg-slate-800/30 transition-colors">
                     <TableCell className="font-medium">
-                        <div className="text-slate-200">{app.studentName}</div>
-                        <div className="text-[10px] text-slate-500">{app.email}</div>
+                        <div className="text-slate-200 text-sm">{app.studentName}</div>
+                        <div className="text-[10px] text-slate-500">{app.studentEmail}</div>
                     </TableCell>
-                    <TableCell className="text-xs text-slate-400 font-mono">{app.courseId?.substring(0,8)}...</TableCell>
+                    <TableCell className="text-[10px] text-slate-400 font-mono">ID: {app.id.substring(0,8)}</TableCell>
                     <TableCell>
                       <Badge className={`${
                         app.status === "Verified" ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" : 
+                        app.status === "Payment" ? "bg-cyan-500/10 text-cyan-400 border-cyan-500/20" :
                         "bg-amber-500/10 text-amber-400 border-amber-500/20"
                       } rounded-full px-3 text-[10px] uppercase font-black`}>
                         {app.status || "Pending"}
                       </Badge>
                     </TableCell>
-             
-             
-             
                     <TableCell className="text-right">
-  <button 
-    onClick={() => navigate(`/admin/application/${app.id}`)} 
-        
-    
-    // dynamic ID per application change hbe //
-
-
-
-    className="text-[10px] uppercase font-black text-cyan-500 hover:text-cyan-400 tracking-tighter transition-colors"
-  >
-    Review Details
-  </button>
-</TableCell>
+                      <button 
+                        onClick={() => navigate(`/admin/application/${app.id}`)} 
+                        className="text-[10px] uppercase font-black text-cyan-500 hover:text-cyan-400 tracking-tighter transition-colors"
+                      >
+                        Review Details
+                      </button>
+                    </TableCell>
                   </TableRow>
                 )) : (
-                    <TableRow><TableCell colSpan={4} className="text-center py-10 text-slate-600">No applications yet.</TableCell></TableRow>
+                    <TableRow><TableCell colSpan={4} className="text-center py-10 text-slate-600">No recent applications found.</TableCell></TableRow>
                 )}
               </TableBody>
             </Table>
@@ -243,13 +253,6 @@ export default function AdminDashboard() {
     </div>
   )
 }
-
-
-
-
-
-
-// --- UPDATED STAT CARD WITH LINK STYLES ---//
 
 function StatMiniCard({ icon, label, value, isLink = false }: { icon: any, label: string, value: any, isLink?: boolean }) {
     return (

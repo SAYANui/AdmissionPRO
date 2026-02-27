@@ -60,7 +60,7 @@ const AdminSignup = () => {
         createdAt: serverTimestamp()
       })
 
-      // 3. iffffffffff  Success Move to Admin Dashboard💦💦
+      // 3. iffffffffff  Success Move to Admin Dashboard//
       navigate("/admin/dashboard")
     } catch (error) {
   console.error("Signup Error:", error);
@@ -78,8 +78,8 @@ const AdminSignup = () => {
     <div className="flex items-center justify-center min-h-screen bg-slate-950 p-6 selection:bg-cyan-500/30 font-sans">
       <div className="group relative w-full max-w-md">
         
-        <div className="absolute -inset-1 bg-gradient-to-r from-cyan-600 to-blue-600 rounded-xl blur-2xl opacity-20 group-hover:opacity-40 transition duration-1000 group-hover:duration-200"></div>
-        <div className="absolute -inset-px bg-gradient-to-r from-cyan-400 to-cyan-600 rounded-xl opacity-0 group-hover:opacity-100 transition duration-500"></div>
+        <div className="absolute -inset-1 bg-linear-to-r from-cyan-600 to-blue-600 rounded-xl blur-2xl opacity-20 group-hover:opacity-40 transition duration-1000 group-hover:duration-200"></div>
+        <div className="absolute -inset-px bg-linear-to-r from-cyan-400 to-cyan-600 rounded-xl opacity-0 group-hover:opacity-100 transition duration-500"></div>
 
         <Card className="relative w-full border-none bg-slate-900 text-slate-50 shadow-2xl overflow-hidden">
           
