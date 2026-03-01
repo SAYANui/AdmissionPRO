@@ -147,7 +147,7 @@ function CourseMediaRenderer({ url, className }: { url: string, className?: stri
     return <iframe className={className} src={`https://www.youtube.com/embed/${videoId}`} title="Course Video" allowFullScreen></iframe>;
   }
   if (isVideo) return <video src={url} className={className} controls muted />;
-  return <img src={url} alt="Course Media" className={className} onError={(e) => (e.currentTarget.src = "https://www.ndtv.com/news/tumse%20na%20ho%20payega.png")} />;
+  return <img src={url} alt="Course Media" className={className} onError={(e) => (e.currentTarget.src = "")} />;
 }
 
 function CourseCard({ course, onUpdate }: { course: any, onUpdate: () => void }) {

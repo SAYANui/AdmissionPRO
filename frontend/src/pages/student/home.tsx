@@ -13,7 +13,7 @@ import {
   SearchX,
   LogOut,
   Loader2,
-  RefreshCw // Added for the refresh button
+  RefreshCw 
 } from "lucide-react";
 
 // --- FIREBASE IMPORTS ---
@@ -26,15 +26,13 @@ const Home = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [courses, setCourses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false); // For subtle sync feedback
+  const [refreshing, setRefreshing] = useState(false); 
   const [appStatus, setAppStatus] = useState<string | null>(null);
   const navigate = useNavigate();
 
-  // --- LOGIC OPTIMIZATION: One-time Fetch ---
   const loadData = useCallback(async (userEmail?: string | null) => {
     setRefreshing(true);
     try {
-      // 1. Fetch Courses
       const qCourses = query(collection(db, "courses"), orderBy("createdAt", "desc"));
       const courseSnap = await getDocs(qCourses);
       const fetchedCourses = courseSnap.docs.map(doc => ({
@@ -43,7 +41,6 @@ const Home = () => {
       }));
       setCourses(fetchedCourses);
 
-      // 2. Fetch Status directly if user exists
       if (userEmail) {
         const qApp = query(
           collection(db, "applications"),
@@ -73,7 +70,6 @@ const Home = () => {
     return () => unsubscribe();
   }, [loadData]);
 
-  // --- RESTORED YOUTUBE FORMATTER ---
   const getEmbedUrl = (url: string) => {
     if (!url) return "";
     if (url.includes("youtube.com/embed/")) return url;
@@ -97,7 +93,6 @@ const Home = () => {
   return (
     <div className="dark min-h-screen bg-slate-950 text-slate-50 font-sans pb-20 selection:bg-cyan-500/30">
       
-      {/* 1. BRANDED HEADER (Style Preserved) */}
       <nav className="flex items-center justify-between px-4 md:px-8 py-6 border-b border-slate-800 bg-slate-950/80 backdrop-blur-md sticky top-0 z-50">
         <div className="group/logo relative">
           <div className="absolute -inset-1 bg-cyan-500 rounded-lg blur opacity-25 group-hover/logo:opacity-75 transition duration-1000"></div>
@@ -110,7 +105,6 @@ const Home = () => {
         </div>
 
         <div className="flex items-center space-x-3">
-          {/* REFRESH BUTTON (Added for manual logic trigger) */}
           <Button 
             variant="ghost" 
             size="icon" 
@@ -142,9 +136,9 @@ const Home = () => {
         </div>
       </nav>
 
-      {/* 2. MAIN FEED (Style Preserved) */}
-      <main className="max-w-xl mx-auto mt-10 px-4">
-        <div className="relative group mb-12">
+      {/* --- MODIFIED GRID LAYOUT --- */}
+      <main className="max-w-7xl mx-auto mt-10 px-6">
+        <div className="max-w-xl mx-auto relative group mb-12">
           <div className="absolute -inset-1 bg-gradient-to-r from-cyan-600 to-blue-600 rounded-xl blur opacity-20 group-focus-within:opacity-50 transition duration-500"></div>
           <div className="relative flex items-center">
             <Search className="absolute left-4 h-5 w-5 text-slate-500 group-focus-within:text-cyan-400 transition-colors" />
@@ -167,26 +161,26 @@ const Home = () => {
             <Loader2 className="h-10 w-10 animate-spin text-cyan-500" />
           </div>
         ) : (
-          <div className="space-y-12">
+          /* GRID CHANGE: 1 col on mobile, 2 on tablet, 3 on desktop */
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {filteredFeed.length > 0 ? (
               filteredFeed.map((post) => (
                 <div key={post.id} className="group relative">
                   <div className="absolute -inset-1 bg-cyan-500 rounded-2xl blur opacity-0 group-hover:opacity-10 transition duration-500"></div>
-                  <Card className="relative bg-slate-900 border-slate-800 overflow-hidden rounded-2xl border-none shadow-2xl">
-                    <CardHeader className="p-4 flex flex-row items-center justify-between">
+                  <Card className="relative h-full flex flex-col bg-slate-900 border-slate-800 overflow-hidden rounded-2xl border-none shadow-2xl">
+                    <CardHeader className="p-4 flex flex-row items-center justify-between shrink-0">
                        <div className="flex items-center space-x-3">
                          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center font-black text-slate-950 text-sm">
                            {post.collegeName ? post.collegeName.charAt(0) : post.name.charAt(0)}
                          </div>
-                         <div>
-                           <p className="text-sm font-bold text-slate-100">{post.collegeName || "Institution"}</p>
+                         <div className="overflow-hidden">
+                           <p className="text-sm font-bold text-slate-100 truncate w-32 md:w-40">{post.collegeName || "Institution"}</p>
                            <p className="text-[10px] text-cyan-500 font-bold tracking-widest uppercase">Course</p>
                          </div>
                        </div>
                     </CardHeader>
 
-                    {/* RESTORED VIDEO COMPONENT */}
-                    <div className="aspect-video w-full bg-black flex items-center justify-center border-y border-slate-800/50">
+                    <div className="aspect-video w-full bg-black flex items-center justify-center border-y border-slate-800/50 overflow-hidden">
                       {post.mediaUrl?.includes("youtube") || post.mediaUrl?.includes("youtu.be") ? (
                         <iframe 
                           className="w-full h-full" 
@@ -198,15 +192,15 @@ const Home = () => {
                         <img 
                           src={post.mediaUrl || "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4"} 
                           alt={post.name} 
-                          className="w-full h-full object-cover" 
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
                         />
                       )}
                     </div>
 
-                    <CardContent className="p-5">
-                      <h3 className="font-bold text-xl text-slate-50 mb-2">{post.name}</h3>
-                      <p className="text-sm text-slate-400 leading-relaxed mb-6 line-clamp-3">{post.description}</p>
-                      <Button asChild className="w-full bg-white hover:bg-cyan-400 text-slate-950 font-bold py-6 transition-colors">
+                    <CardContent className="p-5 flex flex-col flex-grow">
+                      <h3 className="font-bold text-lg text-slate-50 mb-2 line-clamp-1">{post.name}</h3>
+                      <p className="text-sm text-slate-400 leading-relaxed mb-6 line-clamp-2 flex-grow">{post.description}</p>
+                      <Button asChild className="w-full bg-white hover:bg-cyan-400 text-slate-950 font-bold py-6 transition-colors mt-auto">
                         <Link to={`/student/course/${post.id}`}>Apply & View Details</Link>
                       </Button>
                     </CardContent>
@@ -214,7 +208,7 @@ const Home = () => {
                 </div>
               ))
             ) : (
-              <div className="flex flex-col items-center justify-center py-20 text-center">
+              <div className="col-span-full flex flex-col items-center justify-center py-20 text-center">
                 <SearchX className="h-12 w-12 text-slate-500 mb-4" />
                 <h3 className="text-xl font-bold text-slate-200">No Courses Found</h3>
                 <Button variant="link" className="mt-4 text-cyan-400" onClick={() => setSearchQuery("")}>Clear search</Button>
@@ -224,7 +218,6 @@ const Home = () => {
         )}
       </main>
 
-      {/* 3. MOBILE NAV (Style Preserved) */}
       <div className="fixed bottom-0 w-full bg-slate-950/90 backdrop-blur-xl border-t border-slate-800 p-4 flex justify-around items-center md:hidden z-50">
           <Link to="/student/home" className="flex flex-col items-center text-cyan-400 font-bold">
             <HomeIcon className="h-5 w-5 mb-1" />
